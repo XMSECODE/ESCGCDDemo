@@ -35,7 +35,9 @@
     
 //    [self async_concurrent_queue];
     
-//    [self async_concurrent_barier_queue];
+//    [self concurrent_queue_barier_sync];
+    
+//    [self concurrent_queue_barier_async];
     
 //    [self dispatch_after];
     
@@ -50,6 +52,7 @@
 //    [self dispatch_group_3];
     
 //    [self dispatch_semaphore];
+    
 }
 
 /**
@@ -97,19 +100,41 @@
 }
 
 /**
- 异步并行队列，barrier同步，使barrier前面的任务全部执行完毕，才会执行barrier后面的任务
+ 异步并行队列，barrier同步，使barrier前面的任务全部执行完毕，才会执行barrier后面添加到queue的任务,barrier_sync会影响后阻塞后续代码的执行
  */
-- (void)async_concurrent_barier_queue {
-    for (int i = 0; i < 200; i++) {
+- (void)concurrent_queue_barier_sync {
+    NSLog(@"start");
+    for (int i = 0; i < 10; i++) {
         dispatch_async(self.concurrent_queue, ^{
             NSLog(@"%d===%@",i,[NSThread currentThread]);
         });
-        if (i == 100) {
+        if (i == 5) {
+            NSLog(@"barrier sync");
             dispatch_barrier_sync(self.concurrent_queue, ^{
                 NSLog(@"dispatch_barrier_sync===%d===%@",i,[NSThread currentThread]);
             });
         }
     }
+    NSLog(@"end");
+}
+
+/**
+ 异步并行队列，barrier同步，使barrier前面的任务全部执行完毕，才会执行barrier后面添加到queue的任务，barrier_async不会影响后续代码的执行
+ */
+- (void)concurrent_queue_barier_async {
+    NSLog(@"start");
+    for (int i = 0; i < 10; i++) {
+        dispatch_async(self.concurrent_queue, ^{
+            NSLog(@"%d===%@",i,[NSThread currentThread]);
+        });
+        if (i == 5) {
+            NSLog(@"barrier async");
+            dispatch_barrier_async(self.concurrent_queue, ^{
+                NSLog(@"dispatch_barrier_async===%d===%@",i,[NSThread currentThread]);
+            });
+        }
+    }
+    NSLog(@"end");
 }
 
 /**
@@ -135,7 +160,7 @@
 }
 
 /**
- 快速多线程迭代
+ 多线程快速迭代
  */
 - (void)dispatch_apply {
     dispatch_apply(10, self.concurrent_queue, ^(size_t index) {
